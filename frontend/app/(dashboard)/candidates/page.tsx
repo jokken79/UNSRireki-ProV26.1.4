@@ -2,26 +2,100 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
+import {
+  Plus,
+  Search,
+  FileText,
+  Clock,
+  CheckCircle,
+  XCircle,
+  UserCheck,
+  Users,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Edit3,
+  Eye
+} from 'lucide-react'
 import { candidates } from '@/lib/api'
 import type { Candidate, CandidateStatus } from '@/types'
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 
-const statusLabels: Record<CandidateStatus, string> = {
-  registered: '登録済',
-  presented: '紹介中',
-  accepted: '採用決定',
-  rejected: '不採用',
-  processing: '手続中',
-  hired: '入社済',
+const statusConfig: Record<CandidateStatus, { label: string; class: string; icon: React.ElementType }> = {
+  registered: {
+    label: '登録済',
+    class: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-600',
+    icon: FileText
+  },
+  presented: {
+    label: '紹介中',
+    class: 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-300 dark:border-blue-700',
+    icon: Clock
+  },
+  accepted: {
+    label: '採用決定',
+    class: 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300 border border-green-300 dark:border-green-700',
+    icon: CheckCircle
+  },
+  rejected: {
+    label: '不採用',
+    class: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300 border border-red-300 dark:border-red-700',
+    icon: XCircle
+  },
+  processing: {
+    label: '手続中',
+    class: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-300 dark:border-amber-700',
+    icon: UserCheck
+  },
+  hired: {
+    label: '入社済',
+    class: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700',
+    icon: Users
+  },
 }
 
-const statusColors: Record<CandidateStatus, string> = {
-  registered: 'bg-gray-100 text-gray-800',
-  presented: 'bg-blue-100 text-blue-800',
-  accepted: 'bg-green-100 text-green-800',
-  rejected: 'bg-red-100 text-red-800',
-  processing: 'bg-yellow-100 text-yellow-800',
-  hired: 'bg-purple-100 text-purple-800',
+function TableSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-700 px-6 py-4">
+        <div className="flex gap-4">
+          {[60, 150, 80, 100, 80, 80, 60].map((w, i) => (
+            <div key={i} className="h-4 bg-slate-200 dark:bg-slate-600 rounded" style={{ width: w }} />
+          ))}
+        </div>
+      </div>
+      {[...Array(10)].map((_, i) => (
+        <div key={i} className="px-6 py-5 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex gap-4 items-center">
+            <div className="w-12 h-4 bg-slate-200 dark:bg-slate-700 rounded" />
+            <div className="flex-1">
+              <div className="w-40 h-4 bg-slate-200 dark:bg-slate-700 rounded mb-2" />
+              <div className="w-24 h-3 bg-slate-100 dark:bg-slate-800 rounded" />
+            </div>
+            <div className="w-16 h-4 bg-slate-200 dark:bg-slate-700 rounded" />
+            <div className="w-24 h-4 bg-slate-200 dark:bg-slate-700 rounded" />
+            <div className="w-20 h-6 bg-slate-200 dark:bg-slate-700 rounded-full" />
+            <div className="w-20 h-4 bg-slate-200 dark:bg-slate-700 rounded" />
+            <div className="w-16 h-4 bg-slate-200 dark:bg-slate-700 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function StatusBadge({ status }: { status: CandidateStatus }) {
+  const config = statusConfig[status]
+  const Icon = config.icon
+
+  return (
+    <span className={cn('inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-full shadow-sm', config.class)}>
+      <Icon size={12} />
+      {config.label}
+    </span>
+  )
 }
 
 export default function CandidatesPage() {
@@ -70,35 +144,47 @@ export default function CandidatesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-7xl mx-auto pb-10">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col md:flex-row md:items-center justify-between gap-4"
+      >
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             履歴書管理
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
             候補者の登録・管理
           </p>
         </div>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => {
             setEditingCandidate(null)
             setShowForm(true)
           }}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+          className="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-xl font-semibold transition-all shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/40 flex items-center gap-2"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
+          <Plus size={20} />
           新規登録
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
 
       {/* Filters */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="card p-6 border border-slate-200 dark:border-slate-700 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80"
+      >
         <div className="flex flex-wrap gap-4">
-          <div className="flex-1 min-w-[200px]">
+          <div className="flex-1 min-w-[250px] relative">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+              <Search size={18} className="text-slate-400" />
+            </div>
             <input
               type="text"
               placeholder="名前で検索..."
@@ -107,20 +193,20 @@ export default function CandidatesPage() {
                 setSearch(e.target.value)
                 setPage(1)
               }}
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+              className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow shadow-sm hover:shadow-md"
             />
           </div>
-          <div>
+          <div className="min-w-[200px]">
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value)
                 setPage(1)
               }}
-              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow shadow-sm hover:shadow-md appearance-none cursor-pointer"
             >
               <option value="">全てのステータス</option>
-              {Object.entries(statusLabels).map(([value, label]) => (
+              {Object.entries(statusConfig).map(([value, { label }]) => (
                 <option key={value} value={value}>
                   {label}
                 </option>
@@ -128,107 +214,96 @@ export default function CandidatesPage() {
             </select>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="card overflow-hidden border border-slate-200 dark:border-slate-700 shadow-xl"
+      >
         {isLoading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
-            <p className="mt-4 text-gray-500">読み込み中...</p>
-          </div>
+          <TableSkeleton />
         ) : error ? (
-          <div className="p-8 text-center text-red-500">
-            データの取得に失敗しました
+          <div className="p-12 text-center">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <XCircle size={32} className="text-red-500" />
+            </div>
+            <p className="text-red-500 font-semibold">データの取得に失敗しました</p>
+            <p className="text-slate-400 text-sm mt-2">ページを更新してください</p>
           </div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-slate-700">
+                <thead className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border-b-2 border-primary-200 dark:border-primary-800">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      氏名
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      国籍
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      電話番号
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      ステータス
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      登録日
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      操作
-                    </th>
+                    {['ID', '氏名', '国籍', '電話番号', 'ステータス', '登録日', '操作'].map((header) => (
+                      <th key={header} className="px-6 py-4 text-left text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                        {header}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {data?.items.map((candidate) => (
-                    <tr
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {data?.items.map((candidate, index) => (
+                    <motion.tr
                       key={candidate.id}
-                      className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.03 * index }}
+                      className="group hover:bg-gradient-to-r hover:from-primary-50/50 hover:to-transparent dark:hover:from-primary-900/10 transition-all duration-200"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        {candidate.id}
+                      <td className="px-6 py-5 whitespace-nowrap text-sm font-mono text-slate-500 dark:text-slate-400">
+                        #{candidate.id}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-5 whitespace-nowrap">
                         <div>
-                          <div className="font-medium text-gray-900 dark:text-white">
+                          <div className="font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                             {candidate.full_name}
                           </div>
                           {candidate.name_kana && (
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                            <div className="text-xs text-slate-400 mt-0.5">
                               {candidate.name_kana}
                             </div>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      <td className="px-6 py-5 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">
                         {candidate.nationality || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                      <td className="px-6 py-5 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300 font-mono">
                         {candidate.mobile || candidate.phone || '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                            statusColors[candidate.status]
-                          }`}
-                        >
-                          {statusLabels[candidate.status]}
-                        </span>
+                      <td className="px-6 py-5 whitespace-nowrap">
+                        <StatusBadge status={candidate.status} />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      <td className="px-6 py-5 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
                         {new Date(candidate.created_at).toLocaleDateString('ja-JP')}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="px-6 py-5 whitespace-nowrap">
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Link
                             href={`/candidates/${candidate.id}`}
-                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400"
+                            className="p-2 rounded-lg bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors"
+                            title="詳細"
                           >
-                            詳細
+                            <Eye size={16} />
                           </Link>
                           <button
                             onClick={() => {
                               setEditingCandidate(candidate)
                               setShowForm(true)
                             }}
-                            className="text-gray-600 hover:text-gray-800 dark:text-gray-400"
+                            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                            title="編集"
                           >
-                            編集
+                            <Edit3 size={16} />
                           </button>
                         </div>
                       </td>
-                    </tr>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>
@@ -236,31 +311,35 @@ export default function CandidatesPage() {
 
             {/* Pagination */}
             {data && data.pages > 1 && (
-              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  全 {data.total} 件中 {(page - 1) * 20 + 1} - {Math.min(page * 20, data.total)} 件
+              <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+                  全 <span className="font-bold text-slate-700 dark:text-slate-200">{data.total.toLocaleString()}</span> 件中{' '}
+                  <span className="font-bold text-slate-700 dark:text-slate-200">{(page - 1) * 20 + 1}</span> -{' '}
+                  <span className="font-bold text-slate-700 dark:text-slate-200">{Math.min(page * 20, data.total)}</span> 件
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-50"
+                    className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1 font-medium"
                   >
+                    <ChevronLeft size={16} />
                     前へ
                   </button>
                   <button
                     onClick={() => setPage((p) => Math.min(data.pages, p + 1))}
                     disabled={page === data.pages}
-                    className="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-50"
+                    className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1 font-medium"
                   >
                     次へ
+                    <ChevronRight size={16} />
                   </button>
                 </div>
               </div>
             )}
           </>
         )}
-      </div>
+      </motion.div>
 
       {/* Modal Form */}
       {showForm && (
@@ -318,26 +397,42 @@ function CandidateFormModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        className="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-700"
+      >
+        <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-gradient-to-r from-transparent to-primary-50/30 dark:to-primary-900/10">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+            <div className="w-1.5 h-8 bg-primary-500 rounded-full"></div>
             {candidate ? '候補者編集' : '新規候補者登録'}
           </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+          >
+            <X size={24} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-8 overflow-y-auto max-h-[calc(90vh-140px)]">
           {/* Basic Info */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">基本情報</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <FileText size={20} className="text-primary-500" />
+              基本情報
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   氏名 <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -346,11 +441,11 @@ function CandidateFormModal({
                   value={formData.full_name}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   フリガナ
                 </label>
                 <input
@@ -358,11 +453,11 @@ function CandidateFormModal({
                   name="name_kana"
                   value={formData.name_kana}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   ローマ字
                 </label>
                 <input
@@ -370,18 +465,18 @@ function CandidateFormModal({
                   name="name_romanji"
                   value={formData.name_romanji}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   性別
                 </label>
                 <select
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                 >
                   <option value="">選択してください</option>
                   <option value="男">男</option>
@@ -389,7 +484,7 @@ function CandidateFormModal({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   国籍
                 </label>
                 <input
@@ -397,11 +492,11 @@ function CandidateFormModal({
                   name="nationality"
                   value={formData.nationality}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   生年月日
                 </label>
                 <input
@@ -409,7 +504,7 @@ function CandidateFormModal({
                   name="birth_date"
                   value={formData.birth_date}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                 />
               </div>
             </div>
@@ -417,10 +512,13 @@ function CandidateFormModal({
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">連絡先</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <Users size={20} className="text-primary-500" />
+              連絡先
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   電話番号
                 </label>
                 <input
@@ -428,11 +526,11 @@ function CandidateFormModal({
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   携帯電話
                 </label>
                 <input
@@ -440,11 +538,11 @@ function CandidateFormModal({
                   name="mobile"
                   value={formData.mobile}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   メールアドレス
                 </label>
                 <input
@@ -452,11 +550,11 @@ function CandidateFormModal({
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   郵便番号
                 </label>
                 <input
@@ -464,11 +562,11 @@ function CandidateFormModal({
                   name="postal_code"
                   value={formData.postal_code}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   住所
                 </label>
                 <input
@@ -476,7 +574,7 @@ function CandidateFormModal({
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                 />
               </div>
             </div>
@@ -484,10 +582,13 @@ function CandidateFormModal({
 
           {/* Visa Info */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">在留資格</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <CheckCircle size={20} className="text-primary-500" />
+              在留資格
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   在留資格
                 </label>
                 <input
@@ -495,11 +596,11 @@ function CandidateFormModal({
                   name="visa_type"
                   value={formData.visa_type}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   在留期限
                 </label>
                 <input
@@ -507,18 +608,18 @@ function CandidateFormModal({
                   name="visa_expiry"
                   value={formData.visa_expiry}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   日本語レベル
                 </label>
                 <select
                   name="japanese_level"
                   value={formData.japanese_level}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                 >
                   <option value="">選択してください</option>
                   <option value="N1">N1</option>
@@ -534,7 +635,7 @@ function CandidateFormModal({
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
               備考
             </label>
             <textarea
@@ -542,29 +643,31 @@ function CandidateFormModal({
               value={formData.notes}
               onChange={handleChange}
               rows={3}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700"
+              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow resize-none"
             />
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-end gap-3 pt-6 border-t border-slate-200 dark:border-slate-700">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700"
+              className="px-6 py-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 font-semibold transition-colors"
             >
               キャンセル
             </button>
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium"
+              className="px-8 py-3 rounded-xl bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 disabled:from-primary-400 disabled:to-primary-500 text-white font-semibold shadow-lg shadow-primary-500/25 disabled:shadow-none transition-all"
             >
               {isLoading ? '保存中...' : '保存'}
-            </button>
+            </motion.button>
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }

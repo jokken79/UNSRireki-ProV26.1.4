@@ -33,7 +33,7 @@ function StatCard({
   subtitle?: string
   icon: React.ElementType
   trend?: number
-  color: 'blue' | 'green' | 'orange' | 'red' | 'purple'
+  color: 'blue' | 'green' | 'orange' | 'red' | 'teal'
   delay?: number
 }) {
   const colorClasses = {
@@ -41,7 +41,7 @@ function StatCard({
     green: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-200 dark:border-green-900',
     orange: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-900',
     red: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900',
-    purple: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900',
+    teal: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-200 dark:border-teal-900',
   }
 
   return (
