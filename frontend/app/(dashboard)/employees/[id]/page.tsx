@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { employees } from '@/lib/api'
 import Link from 'next/link'
 import { useState } from 'react'
+import { PhotoDisplay } from '@/components/ui/avatar-display'
 
 export default function EmployeeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -51,47 +52,88 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link
-            href={isHaken ? '/employees/haken' : '/employees/ukeoi'}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </Link>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {employee.full_name}
-              </h1>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                isHaken ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-              }`}>
-                {isHaken ? '派遣' : '請負'}
-              </span>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                employee.status === 'active'
-                  ? 'bg-green-100 text-green-800'
-                  : 'bg-red-100 text-red-800'
-              }`}>
-                {employee.status === 'active' ? '在籍' : '退職'}
-              </span>
+      <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col md:flex-row items-start gap-6">
+          {/* Photo */}
+          <PhotoDisplay
+            photoUrl={employee.photo_url}
+            name={employee.full_name}
+          />
+
+          {/* Info */}
+          <div className="flex-1">
+            <div className="flex items-center gap-4 mb-2">
+              <Link
+                href={isHaken ? '/employees/haken' : '/employees/ukeoi'}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </Link>
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {employee.full_name}
+                  </h1>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    isHaken ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                  }`}>
+                    {isHaken ? '派遣' : '請負'}
+                  </span>
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    employee.status === 'active'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {employee.status === 'active' ? '在籍' : '退職'}
+                  </span>
+                </div>
+                <p className="text-gray-500 dark:text-gray-400">
+                  社員番号: {employee.employee_number}
+                </p>
+              </div>
             </div>
-            <p className="text-gray-500 dark:text-gray-400">
-              社員番号: {employee.employee_number}
-            </p>
+
+            {/* Quick Info */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">国籍:</span>
+                <span className="ml-2 font-medium text-gray-900 dark:text-white">{employee.nationality || '-'}</span>
+              </div>
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">在留資格:</span>
+                <span className="ml-2 font-medium text-gray-900 dark:text-white">{employee.visa_type || '-'}</span>
+              </div>
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">入社日:</span>
+                <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                  {employee.hire_date ? new Date(employee.hire_date).toLocaleDateString('ja-JP') : '-'}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">住居:</span>
+                <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                  {employee.housing_type === 'shataku' ? '社宅' :
+                   employee.housing_type === 'own' ? '自宅' :
+                   employee.housing_type === 'rental' ? '賃貸' : '-'}
+                </span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2 mt-4">
+              {employee.status === 'active' && (
+                <button
+                  onClick={() => setShowTerminateModal(true)}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
+                >
+                  退職処理
+                </button>
+              )}
+            </div>
           </div>
         </div>
-        {employee.status === 'active' && (
-          <button
-            onClick={() => setShowTerminateModal(true)}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium"
-          >
-            退職処理
-          </button>
-        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

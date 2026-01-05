@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { candidates } from '@/lib/api'
 import Link from 'next/link'
 import type { CandidateStatus } from '@/types'
+import { PhotoDisplay } from '@/components/ui/avatar-display'
 
 const statusLabels: Record<CandidateStatus, string> = {
   registered: '登録済',
@@ -56,35 +57,68 @@ export default function CandidateDetailPage({ params }: { params: Promise<{ id: 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/candidates"
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {candidate.full_name}
-            </h1>
-            {candidate.name_kana && (
-              <p className="text-gray-500 dark:text-gray-400">{candidate.name_kana}</p>
-            )}
+      <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col md:flex-row items-start gap-6">
+          {/* Photo */}
+          <PhotoDisplay
+            photoUrl={candidate.photo_url}
+            name={candidate.full_name}
+          />
+
+          {/* Info */}
+          <div className="flex-1">
+            <div className="flex items-center gap-4 mb-2">
+              <Link
+                href="/candidates"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </Link>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {candidate.full_name}
+                </h1>
+                {candidate.name_kana && (
+                  <p className="text-gray-500 dark:text-gray-400">{candidate.name_kana}</p>
+                )}
+              </div>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[candidate.status]}`}>
+                {statusLabels[candidate.status]}
+              </span>
+            </div>
+
+            {/* Quick Info */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">国籍:</span>
+                <span className="ml-2 font-medium text-gray-900 dark:text-white">{candidate.nationality || '-'}</span>
+              </div>
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">在留資格:</span>
+                <span className="ml-2 font-medium text-gray-900 dark:text-white">{candidate.visa_type || '-'}</span>
+              </div>
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">電話:</span>
+                <span className="ml-2 font-medium text-gray-900 dark:text-white">{candidate.mobile || candidate.phone || '-'}</span>
+              </div>
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">日本語:</span>
+                <span className="ml-2 font-medium text-gray-900 dark:text-white">{candidate.japanese_level || '-'}</span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2 mt-4">
+              <Link
+                href={`/applications/new?candidate_id=${candidate.id}`}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium"
+              >
+                派遣先に紹介
+              </Link>
+            </div>
           </div>
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[candidate.status]}`}>
-            {statusLabels[candidate.status]}
-          </span>
-        </div>
-        <div className="flex gap-2">
-          <Link
-            href={`/applications/new?candidate_id=${candidate.id}`}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium"
-          >
-            派遣先に紹介
-          </Link>
         </div>
       </div>
 

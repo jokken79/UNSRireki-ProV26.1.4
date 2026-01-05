@@ -1,6 +1,7 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import {
   Users,
@@ -12,8 +13,10 @@ import {
   ArrowUpRight,
   Plus,
   ArrowRight,
+  Camera,
+  RefreshCw,
 } from 'lucide-react'
-import { dashboard } from '@/lib/api'
+import { dashboard, employees } from '@/lib/api'
 import { cn, formatDateJP } from '@/lib/utils'
 import type { DashboardStats, RecentActivity } from '@/types'
 import { TrendChart } from '@/components/dashboard/TrendChart'
@@ -147,6 +150,12 @@ function ActivityItem({
 }
 
 export default function DashboardPage() {
+  const [syncResult, setSyncResult] = useState<{
+    synced: number
+    no_match: number
+    total_processed: number
+  } | null>(null)
+
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ['dashboard-stats'],
     queryFn: dashboard.getStats,
@@ -155,6 +164,17 @@ export default function DashboardPage() {
   const { data: activity, isLoading: activityLoading } = useQuery<RecentActivity>({
     queryKey: ['dashboard-activity'],
     queryFn: () => dashboard.getRecentActivity(10),
+  })
+
+  const syncPhotosMutation = useMutation({
+    mutationFn: employees.syncPhotos,
+    onSuccess: (data) => {
+      setSyncResult({
+        synced: data.synced,
+        no_match: data.no_match,
+        total_processed: data.total_processed,
+      })
+    },
   })
 
   if (statsLoading) {
@@ -329,6 +349,41 @@ export default function DashboardPage() {
                 <span className="text-xs">承認待ち</span>
               </button>
             </div>
+
+            {/* Photo Sync Button */}
+            <button
+              onClick={() => syncPhotosMutation.mutate()}
+              disabled={syncPhotosMutation.isPending}
+              className="w-full py-3 px-4 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-primary-300 hover:bg-primary-50/50 dark:hover:bg-primary-900/10 transition-all flex items-center justify-center gap-3 text-slate-600 dark:text-slate-400 hover:text-primary-600 disabled:opacity-50 disabled:cursor-wait"
+            >
+              {syncPhotosMutation.isPending ? (
+                <>
+                  <RefreshCw size={20} className="animate-spin" />
+                  <span className="text-sm font-medium">同期中...</span>
+                </>
+              ) : (
+                <>
+                  <Camera size={20} />
+                  <span className="text-sm font-medium">写真を同期（候補者→社員）</span>
+                </>
+              )}
+            </button>
+
+            {/* Sync Result */}
+            {syncResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-sm"
+              >
+                <p className="text-green-700 dark:text-green-300 font-medium">
+                  写真同期完了
+                </p>
+                <p className="text-green-600 dark:text-green-400 text-xs mt-1">
+                  同期: {syncResult.synced}名 / 一致なし: {syncResult.no_match}名
+                </p>
+              </motion.div>
+            )}
           </div>
 
           <div className="mt-8 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-800">

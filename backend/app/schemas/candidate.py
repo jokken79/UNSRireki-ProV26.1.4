@@ -42,6 +42,7 @@ class CandidateBase(BaseModel):
     nationality: Optional[str] = Field(None, max_length=50, description="国籍")
     birth_date: Optional[date] = Field(None, description="生年月日")
     marital_status: Optional[str] = Field(None, max_length=20, description="配偶者")
+    photo_url: Optional[str] = Field(None, max_length=500, description="証明写真 URL")
 
     # Contact
     postal_code: Optional[str] = Field(None, max_length=10, description="〒")
@@ -115,6 +116,7 @@ class CandidateUpdate(BaseModel):
     nationality: Optional[str] = None
     birth_date: Optional[date] = None
     marital_status: Optional[str] = None
+    photo_url: Optional[str] = None
     postal_code: Optional[str] = None
     address: Optional[str] = None
     building_name: Optional[str] = None

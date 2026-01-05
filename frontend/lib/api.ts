@@ -12,7 +12,7 @@ import type {
   User,
 } from '@/types'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 // Create axios instance
 const api = axios.create({
@@ -263,6 +263,18 @@ export const employees = {
 
   getStats: async (): Promise<{ total_active: number; haken_count: number; ukeoi_count: number; terminated_count: number }> => {
     const { data } = await api.get('/employees/stats/summary')
+    return data
+  },
+
+  syncPhotos: async (): Promise<{
+    synced: number
+    no_match: number
+    already_has_photo: number
+    errors: number
+    total_processed: number
+    candidates_with_photos: number
+  }> => {
+    const { data } = await api.post('/employees/sync-photos')
     return data
   },
 }

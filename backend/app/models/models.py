@@ -144,6 +144,7 @@ class Candidate(Base):
     nationality = Column(String(50))  # 国籍
     birth_date = Column(Date)  # 生年月日
     marital_status = Column(String(20))  # 配偶者
+    photo_url = Column(String(500))  # 証明写真 URL
 
     # Contact (連絡先)
     postal_code = Column(String(10))  # 〒

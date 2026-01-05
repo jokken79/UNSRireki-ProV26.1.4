@@ -22,6 +22,7 @@ import { candidates } from '@/lib/api'
 import type { Candidate, CandidateStatus } from '@/types'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { AvatarDisplay } from '@/components/ui/avatar-display'
 
 const statusConfig: Record<CandidateStatus, { label: string; class: string; icon: React.ElementType }> = {
   registered: {
@@ -239,7 +240,7 @@ export default function CandidatesPage() {
               <table className="w-full">
                 <thead className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border-b-2 border-primary-200 dark:border-primary-800">
                   <tr>
-                    {['ID', '氏名', '国籍', '電話番号', 'ステータス', '登録日', '操作'].map((header) => (
+                    {['ID', '写真', '氏名', '国籍', '電話番号', 'ステータス', '登録日', '操作'].map((header) => (
                       <th key={header} className="px-6 py-4 text-left text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
                         {header}
                       </th>
@@ -257,6 +258,13 @@ export default function CandidatesPage() {
                     >
                       <td className="px-6 py-5 whitespace-nowrap text-sm font-mono text-slate-500 dark:text-slate-400">
                         #{candidate.id}
+                      </td>
+                      <td className="px-6 py-5 whitespace-nowrap">
+                        <AvatarDisplay
+                          photoUrl={candidate.photo_url}
+                          name={candidate.full_name}
+                          size="sm"
+                        />
                       </td>
                       <td className="px-6 py-5 whitespace-nowrap">
                         <div>

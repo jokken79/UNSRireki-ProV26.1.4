@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { employees } from '@/lib/api'
 import type { Employee } from '@/types'
 import Link from 'next/link'
+import { AvatarDisplay } from '@/components/ui/avatar-display'
 
 export default function UkeoiEmployeesPage() {
   const [search, setSearch] = useState('')
@@ -55,6 +56,9 @@ export default function UkeoiEmployeesPage() {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     社員番号
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    写真
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     氏名
@@ -108,6 +112,13 @@ function EmployeeRow({ employee }: { employee: Employee }) {
     <tr className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors">
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
         {employee.employee_number}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <AvatarDisplay
+          photoUrl={employee.photo_url}
+          name={employee.full_name}
+          size="sm"
+        />
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div>

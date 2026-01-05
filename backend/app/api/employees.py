@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 from app.core.security import get_current_user, require_staff
 from app.models.models import (
-    User, Employee, HakenAssignment, UkeoiAssignment, EmploymentType
+    User, Employee, HakenAssignment, UkeoiAssignment, EmploymentType, Candidate
 )
 from app.schemas.employee import (
     EmployeeCreate,
@@ -224,4 +224,78 @@ async def get_employee_stats(
         "haken_count": haken_count,
         "ukeoi_count": ukeoi_count,
         "terminated_count": terminated_count,
+    }
+
+
+@router.post("/sync-photos")
+async def sync_photos_from_candidates(
+    current_user: User = Depends(require_staff),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Sync photos from candidates to employees.
+    Matches by full_name + birth_date.
+    """
+    # Get all employees without photos
+    employees_result = await db.execute(
+        select(Employee).where(
+            (Employee.photo_url.is_(None)) | (Employee.photo_url == "")
+        )
+    )
+    employees_without_photos = employees_result.scalars().all()
+
+    # Get all candidates with photos
+    candidates_result = await db.execute(
+        select(Candidate).where(
+            Candidate.photo_url.isnot(None),
+            Candidate.photo_url != ""
+        )
+    )
+    candidates_with_photos = candidates_result.scalars().all()
+
+    # Create lookup by name + birth_date (uppercase name for case-insensitive match)
+    candidate_map = {}
+    for c in candidates_with_photos:
+        if c.full_name and c.birth_date:
+            key = (c.full_name.strip().upper(), str(c.birth_date))
+            candidate_map[key] = c.photo_url
+
+    # Stats
+    synced = 0
+    no_match = 0
+    already_has_photo = 0
+    errors = 0
+
+    for emp in employees_without_photos:
+        try:
+            if emp.photo_url:
+                already_has_photo += 1
+                continue
+
+            if not emp.full_name or not emp.birth_date:
+                no_match += 1
+                continue
+
+            # Try to find matching candidate
+            key = (emp.full_name.strip().upper(), str(emp.birth_date))
+            photo_url = candidate_map.get(key)
+
+            if photo_url:
+                emp.photo_url = photo_url
+                synced += 1
+            else:
+                no_match += 1
+
+        except Exception:
+            errors += 1
+
+    await db.commit()
+
+    return {
+        "synced": synced,
+        "no_match": no_match,
+        "already_has_photo": already_has_photo,
+        "errors": errors,
+        "total_processed": len(employees_without_photos),
+        "candidates_with_photos": len(candidates_with_photos),
     }
