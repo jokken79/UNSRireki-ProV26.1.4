@@ -53,3 +53,12 @@ temp/
 
 # Claude Code
 .claude/
+
+# Playwright MCP
+.playwright-mcp/
+
+# Install logs
+install_log.txt
+
+# Windows artifacts
+nul
