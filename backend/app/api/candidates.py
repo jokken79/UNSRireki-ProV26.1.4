@@ -22,6 +22,36 @@ from app.schemas.candidate import (
 
 router = APIRouter()
 
+@router.get("/debug/{candidate_id}")
+async def debug_candidate(
+    candidate_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    # Debug: Show model columns
+    from sqlalchemy import inspect as sa_inspect
+    mapper = sa_inspect(Candidate)
+    columns = [c.key for c in mapper.columns]
+    has_photo_url = 'photo_url' in columns
+
+    result = await db.execute(
+        select(Candidate).where(Candidate.id == candidate_id)
+    )
+    candidate = result.scalar_one_or_none()
+    if not candidate:
+        return {"error": "not found", "model_columns": columns, "has_photo_url": has_photo_url}
+
+    return {
+        "id": candidate.id,
+        "full_name": candidate.full_name,
+        "photo_url": candidate.photo_url,
+        "photo_url_type": type(candidate.photo_url).__name__,
+        "model_columns": columns,
+        "has_photo_url_column": has_photo_url,
+    }
+
+
+
 
 @router.get("", response_model=CandidateListResponse)
 async def list_candidates(
@@ -85,6 +115,9 @@ async def get_candidate(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Candidate not found"
         )
+
+    # Debug: Log photo_url
+    print(f"DEBUG - Candidate {candidate_id} photo_url: {candidate.photo_url}")
 
     return candidate
 

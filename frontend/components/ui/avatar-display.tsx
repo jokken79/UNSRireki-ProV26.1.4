@@ -44,7 +44,7 @@ export function AvatarDisplay({
 
     // If it starts with /uploads, prepend the API URL
     if (photoUrl.startsWith('/uploads')) {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
       return `${apiUrl}${photoUrl}`
     }
 
@@ -115,7 +115,7 @@ export function PhotoDisplay({
       return photoUrl
     }
     if (photoUrl.startsWith('/uploads')) {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001'
       return `${apiUrl}${photoUrl}`
     }
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
