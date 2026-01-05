@@ -6,6 +6,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
 from app.core.config import settings
@@ -32,7 +33,7 @@ async def list_candidates(
     db: AsyncSession = Depends(get_db)
 ):
     """List candidates with pagination and filtering."""
-    query = select(Candidate)
+    query = select(Candidate).options(selectinload(Candidate.documents))
 
     # Apply filters
     if status:
@@ -75,7 +76,7 @@ async def get_candidate(
 ):
     """Get a single candidate by ID."""
     result = await db.execute(
-        select(Candidate).where(Candidate.id == candidate_id)
+        select(Candidate).options(selectinload(Candidate.documents)).where(Candidate.id == candidate_id)
     )
     candidate = result.scalar_one_or_none()
 
