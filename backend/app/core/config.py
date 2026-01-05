@@ -1,7 +1,10 @@
 """Application configuration using Pydantic Settings."""
 from functools import lru_cache
-from typing import List
+from typing import List, Optional
+import secrets
+import warnings
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
 
 
 class Settings(BaseSettings):
@@ -18,7 +21,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "UNS Rirekisho Pro"
     APP_VERSION: str = "26.1.4"
     DEBUG: bool = False
-    ENVIRONMENT: str = "development"
+    ENVIRONMENT: str = "development"  # "development", "staging", "production"
 
     # Company Info
     COMPANY_NAME: str = "ユニバーサル企画株式会社"
@@ -34,18 +37,46 @@ class Settings(BaseSettings):
     DATABASE_POOL_SIZE: int = 20
     DATABASE_MAX_OVERFLOW: int = 10
 
-    # JWT Authentication
-    SECRET_KEY: str = "your-super-secret-key-change-in-production"
+    # JWT Authentication - SECURITY: SECRET_KEY must be set via environment variable in production
+    SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    # CORS
+    @field_validator("SECRET_KEY", mode="before")
+    @classmethod
+    def validate_secret_key(cls, v: str, info) -> str:
+        """Validate SECRET_KEY - generate random key in dev, require explicit key in production."""
+        if not v or v == "your-super-secret-key-change-in-production":
+            # Generate secure random key for development
+            generated_key = secrets.token_urlsafe(32)
+            warnings.warn(
+                "SECRET_KEY not set! Generated random key for development. "
+                "Set SECRET_KEY environment variable for production.",
+                UserWarning
+            )
+            return generated_key
+        if len(v) < 32:
+            raise ValueError("SECRET_KEY must be at least 32 characters long")
+        return v
+
+    # CORS - Configure based on environment
+    # In production, set BACKEND_CORS_ORIGINS env var with comma-separated URLs
     BACKEND_CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
         "http://localhost:3200",
         "http://127.0.0.1:3000",
     ]
+    # Production frontend URL (set via environment variable)
+    FRONTEND_URL: Optional[str] = None
+
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v):
+        """Parse CORS origins from string or list."""
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
 
     # File Storage
     UPLOAD_DIR: str = "./uploads"

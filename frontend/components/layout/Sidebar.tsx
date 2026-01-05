@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard,
   Users,
@@ -18,6 +18,8 @@ import {
   ChevronRight,
   Moon,
   Sun,
+  Menu,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -81,7 +83,22 @@ interface SidebarProps {
 export function Sidebar({ onLogout }: SidebarProps) {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const [isDark, setIsDark] = useState(false)
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
+
+  // Handle escape key to close mobile menu
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileOpen(false)
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [])
 
   const toggleTheme = () => {
     setIsDark(!isDark)
@@ -89,12 +106,102 @@ export function Sidebar({ onLogout }: SidebarProps) {
   }
 
   return (
-    <aside
-      className={cn(
-        'fixed inset-y-0 left-0 z-50 flex flex-col bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transition-all duration-300',
-        collapsed ? 'w-20' : 'w-64'
-      )}
-    >
+    <>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="fixed top-4 left-4 z-40 p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm lg:hidden"
+        aria-label="Open menu"
+      >
+        <Menu size={24} className="text-slate-600 dark:text-slate-400" />
+      </button>
+
+      {/* Mobile Overlay */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMobileOpen(false)}
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 flex flex-col bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transition-all duration-300',
+          // Desktop behavior
+          'hidden lg:flex',
+          collapsed ? 'lg:w-20' : 'lg:w-64'
+        )}
+      >
+        <SidebarContent
+          collapsed={collapsed}
+          setCollapsed={setCollapsed}
+          isDark={isDark}
+          toggleTheme={toggleTheme}
+          onLogout={onLogout}
+          pathname={pathname}
+        />
+      </aside>
+
+      {/* Mobile Sidebar */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.aside
+            initial={{ x: -280 }}
+            animate={{ x: 0 }}
+            exit={{ x: -280 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed inset-y-0 left-0 z-50 w-72 flex flex-col bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 lg:hidden"
+          >
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="absolute top-4 right-4 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+              aria-label="Close menu"
+            >
+              <X size={20} className="text-slate-600 dark:text-slate-400" />
+            </button>
+            <SidebarContent
+              collapsed={false}
+              setCollapsed={() => {}}
+              isDark={isDark}
+              toggleTheme={toggleTheme}
+              onLogout={onLogout}
+              pathname={pathname}
+              isMobile
+            />
+          </motion.aside>
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
+
+interface SidebarContentProps {
+  collapsed: boolean
+  setCollapsed: (value: boolean) => void
+  isDark: boolean
+  toggleTheme: () => void
+  onLogout: () => void
+  pathname: string
+  isMobile?: boolean
+}
+
+function SidebarContent({
+  collapsed,
+  setCollapsed,
+  isDark,
+  toggleTheme,
+  onLogout,
+  pathname,
+  isMobile = false,
+}: SidebarContentProps) {
+  return (
+    <>
       {/* Logo */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-700">
         {!collapsed && (
@@ -113,15 +220,17 @@ export function Sidebar({ onLogout }: SidebarProps) {
             U
           </div>
         )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className={cn(
-            'p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-colors',
-            collapsed && 'absolute -right-3 top-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm'
-          )}
-        >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
+        {!isMobile && (
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className={cn(
+              'p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 transition-colors',
+              collapsed && 'absolute -right-3 top-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm'
+            )}
+          >
+            {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
@@ -150,7 +259,7 @@ export function Sidebar({ onLogout }: SidebarProps) {
               )}
               {isActive && !collapsed && (
                 <motion.div
-                  layoutId="activeIndicator"
+                  layoutId={isMobile ? 'activeIndicatorMobile' : 'activeIndicator'}
                   className="absolute right-3 w-1.5 h-1.5 rounded-full bg-primary-500"
                 />
               )}
@@ -159,7 +268,7 @@ export function Sidebar({ onLogout }: SidebarProps) {
                   {item.badge}
                 </span>
               )}
-              {collapsed && (
+              {collapsed && !isMobile && (
                 <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
                   {item.nameJP}
                 </div>
@@ -199,6 +308,6 @@ export function Sidebar({ onLogout }: SidebarProps) {
           {!collapsed && <span className="text-sm">ログアウト</span>}
         </button>
       </div>
-    </aside>
+    </>
   )
 }

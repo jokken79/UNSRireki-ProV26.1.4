@@ -31,6 +31,16 @@ from app.schemas.employee import (
     HakenAssignmentCreate,
     UkeoiAssignmentCreate,
 )
+from app.schemas.company import (
+    ClientCompanyCreate,
+    ClientCompanyUpdate,
+    ClientCompanyResponse,
+)
+from app.schemas.apartment import (
+    CompanyApartmentCreate,
+    CompanyApartmentUpdate,
+    CompanyApartmentResponse,
+)
 
 __all__ = [
     # Auth
@@ -60,4 +70,12 @@ __all__ = [
     "EmployeeResponse",
     "HakenAssignmentCreate",
     "UkeoiAssignmentCreate",
+    # Company
+    "ClientCompanyCreate",
+    "ClientCompanyUpdate",
+    "ClientCompanyResponse",
+    # Apartment
+    "CompanyApartmentCreate",
+    "CompanyApartmentUpdate",
+    "CompanyApartmentResponse",
 ]

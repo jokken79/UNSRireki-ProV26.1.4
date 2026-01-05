@@ -63,13 +63,22 @@ JWT Bearer トークンを使用。ヘッダー: `Authorization: Bearer <token>`
 )
 
 
-# CORS configuration
+# CORS configuration - dynamically include FRONTEND_URL if set
+cors_origins = list(settings.BACKEND_CORS_ORIGINS)
+if settings.FRONTEND_URL and settings.FRONTEND_URL not in cors_origins:
+    cors_origins.append(settings.FRONTEND_URL)
+
+# Log CORS configuration for debugging
+if settings.DEBUG:
+    print(f"CORS Origins: {cors_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "X-Request-ID"],
+    allow_headers=["Content-Type", "Authorization", "X-Request-ID", "Accept-Language"],
+    expose_headers=["X-Total-Count", "X-Page", "X-Page-Size"],
     max_age=3600,
 )
 
@@ -127,7 +136,7 @@ async def internal_error_handler(request: Request, exc: Exception):
 
 
 # Import and register API routers
-from app.api import auth, candidates, applications, joining_notices, employees, dashboard
+from app.api import auth, candidates, applications, joining_notices, employees, dashboard, companies, apartments
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(candidates.router, prefix="/api/candidates", tags=["Candidates (候補者)"])
@@ -135,6 +144,8 @@ app.include_router(applications.router, prefix="/api/applications", tags=["Appli
 app.include_router(joining_notices.router, prefix="/api/joining-notices", tags=["Joining Notices (入社連絡票)"])
 app.include_router(employees.router, prefix="/api/employees", tags=["Employees (社員)"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+app.include_router(companies.router, prefix="/api/companies", tags=["Companies (派遣先)"])
+app.include_router(apartments.router, prefix="/api/apartments", tags=["Apartments (社宅)"])
 
 
 if __name__ == "__main__":
