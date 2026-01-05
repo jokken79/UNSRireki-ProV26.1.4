@@ -75,6 +75,8 @@ export const auth = {
     const { data } = await api.post('/auth/login', credentials)
     localStorage.setItem('access_token', data.access_token)
     localStorage.setItem('refresh_token', data.refresh_token)
+    // Also set cookie for middleware authentication
+    document.cookie = `access_token=${data.access_token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
     return data
   },
 
@@ -84,6 +86,8 @@ export const auth = {
     } finally {
       localStorage.removeItem('access_token')
       localStorage.removeItem('refresh_token')
+      // Clear cookie
+      document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
     }
   },
 
