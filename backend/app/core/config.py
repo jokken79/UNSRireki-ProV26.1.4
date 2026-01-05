@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/uns_rirekisho"
+    DATABASE_URL: str = "sqlite+aiosqlite:///uns_rirekisho.db"
     DATABASE_POOL_SIZE: int = 20
     DATABASE_MAX_OVERFLOW: int = 10
 
@@ -64,8 +64,12 @@ class Settings(BaseSettings):
     # In production, set BACKEND_CORS_ORIGINS env var with comma-separated URLs
     BACKEND_CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
         "http://localhost:3200",
         "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://127.0.0.1:3002",
     ]
     # Production frontend URL (set via environment variable)
     FRONTEND_URL: Optional[str] = None

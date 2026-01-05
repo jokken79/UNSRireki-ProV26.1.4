@@ -249,16 +249,23 @@ class ClientCompany(Base):
     id = Column(Integer, primary_key=True, index=True)
     legacy_id = Column(Integer, unique=True)  # 派遣先ID
     name = Column(String(200), nullable=False, index=True)  # 派遣先
+    name_kana = Column(String(200))  # カナ
     company_type = Column(String(20))  # 'haken' or 'ukeoi'
+    postal_code = Column(String(10))
     address = Column(Text)
     phone = Column(String(20))
+    fax = Column(String(20))
     contact_person = Column(String(100))
+    contact_email = Column(String(100))
+    billing_rate_default = Column(Numeric(10, 2))  # Default billing rate
+    notes = Column(Text)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
     applications = relationship("Application", back_populates="client_company")
-    haken_assignments = relationship("HakenAssignment", back_populates="client_company")
+    haken_assignments = relationship("HakenAssignment", back_populates="client_company_rel")
 
 
 # ============================================
@@ -581,10 +588,15 @@ class CompanyApartment(Base):
     name = Column(String(100), nullable=False, index=True)
     postal_code = Column(String(10))
     address = Column(Text)
+    building_name = Column(String(100))
+    room_number = Column(String(20))
     capacity = Column(Integer)
-    monthly_rent = Column(Integer)
+    current_occupants = Column(Integer, default=0)
+    monthly_rent = Column(Numeric(10, 2))
+    notes = Column(Text)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
     employees = relationship("Employee", back_populates="apartment")

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { auth } from '@/lib/api'
+import { Users } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -20,12 +21,10 @@ export default function LoginPage() {
       await auth.login({ username, password })
       router.push('/dashboard')
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'ログインに失敗しました'
-      if (typeof err === 'object' && err !== null && 'response' in err) {
-        const axiosError = err as { response?: { data?: { detail?: string } } }
-        setError(axiosError.response?.data?.detail || errorMessage)
+      if (err instanceof Error) {
+        setError(err.message || 'ログインに失敗しました')
       } else {
-        setError(errorMessage)
+        setError('ログインに失敗しました')
       }
     } finally {
       setLoading(false)
@@ -33,30 +32,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-8">
+        <div className="glass-card p-8 shadow-2xl">
           {/* Logo/Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-600 mb-4">
-              <svg
-                className="w-8 h-8 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-600 mb-4 shadow-lg shadow-primary-500/30 ring-4 ring-white/20 dark:ring-white/10">
+              <Users className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
               UNS Rirekisho Pro
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium">
               人材派遣管理システム
             </p>
           </div>
@@ -64,15 +51,15 @@ export default function LoginPage() {
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800">
-                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              <div className="p-4 rounded-lg bg-red-50/50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 backdrop-blur-sm">
+                <p className="text-sm text-red-600 dark:text-red-400 font-medium">{error}</p>
               </div>
             )}
 
             <div>
               <label
                 htmlFor="username"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="label"
               >
                 ユーザー名
               </label>
@@ -83,7 +70,7 @@ export default function LoginPage() {
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 autoComplete="username"
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="input"
                 placeholder="ユーザー名を入力"
               />
             </div>
@@ -91,7 +78,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="label"
               >
                 パスワード
               </label>
@@ -102,7 +89,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="input"
                 placeholder="パスワードを入力"
               />
             </div>

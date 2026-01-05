@@ -2,7 +2,7 @@
 from datetime import datetime, timezone
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -24,14 +24,16 @@ from app.schemas.auth import (
     UserResponse,
     UserUpdate,
 )
+from app.core.limiter import limiter
 
 router = APIRouter()
 
 
 @router.post("/login", response_model=Token)
+@limiter.limit("5/minute")
 async def login(
-    credentials: UserLogin,
     request: Request,
+    credentials: UserLogin,
     db: AsyncSession = Depends(get_db)
 ):
     """Authenticate user and return JWT tokens."""
@@ -61,7 +63,7 @@ async def login(
     token_record = RefreshToken(
         token=refresh_token,
         user_id=user.id,
-        expires_at=decode_token(refresh_token)["exp"],
+        expires_at=datetime.fromtimestamp(decode_token(refresh_token)["exp"], tz=timezone.utc),
         user_agent=request.headers.get("user-agent"),
         ip_address=request.client.host if request.client else None,
     )
@@ -72,9 +74,10 @@ async def login(
 
 
 @router.post("/refresh", response_model=Token)
+@limiter.limit("10/minute")
 async def refresh_token(
-    token: str,
     request: Request,
+    token: str = Query(..., description="Refresh token"),
     db: AsyncSession = Depends(get_db)
 ):
     """Refresh access token using refresh token."""
@@ -124,7 +127,7 @@ async def refresh_token(
     new_token_record = RefreshToken(
         token=new_refresh_token,
         user_id=user.id,
-        expires_at=decode_token(new_refresh_token)["exp"],
+        expires_at=datetime.fromtimestamp(decode_token(new_refresh_token)["exp"], tz=timezone.utc),
         user_agent=request.headers.get("user-agent"),
         ip_address=request.client.host if request.client else None,
     )

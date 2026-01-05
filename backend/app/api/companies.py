@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 from app.core.security import get_current_user, require_staff
 from app.models.models import ClientCompany, User
-from app.schemas.schemas import (
+from app.schemas import (
     ClientCompanyCreate,
     ClientCompanyUpdate,
     ClientCompanyResponse,

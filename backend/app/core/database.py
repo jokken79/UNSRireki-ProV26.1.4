@@ -21,13 +21,32 @@ class Base(DeclarativeBase):
 
 
 # Create async engine
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    pool_size=settings.DATABASE_POOL_SIZE,
-    max_overflow=settings.DATABASE_MAX_OVERFLOW,
-    pool_pre_ping=True,
-)
+connect_args = {}
+if "sqlite" in settings.DATABASE_URL:
+    connect_args = {"check_same_thread": False}
+
+engine_args = {
+    "url": settings.DATABASE_URL,
+    "echo": settings.DEBUG,
+    "pool_pre_ping": True,
+}
+
+# Add pool settings only for non-SQLite
+if "sqlite" not in settings.DATABASE_URL:
+    engine_args["pool_size"] = settings.DATABASE_POOL_SIZE
+    engine_args["max_overflow"] = settings.DATABASE_MAX_OVERFLOW
+
+engine = create_async_engine(**engine_args)
+
+if "sqlite" in settings.DATABASE_URL:
+    from sqlalchemy import event
+    from sqlalchemy.engine import Engine
+    
+    @event.listens_for(engine.sync_engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
 
 # Session factory
 async_session_maker = async_sessionmaker(
@@ -40,11 +59,14 @@ async_session_maker = async_sessionmaker(
 
 
 async def get_db() -> AsyncSession:
-    """Dependency to get database session."""
+    """Dependency to get database session.
+
+    Note: Endpoints should call await db.commit() explicitly after write operations.
+    This dependency handles rollback on exceptions and session cleanup.
+    """
     async with async_session_maker() as session:
         try:
             yield session
-            await session.commit()
         except Exception:
             await session.rollback()
             raise

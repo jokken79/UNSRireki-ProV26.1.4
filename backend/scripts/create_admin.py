@@ -16,20 +16,23 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select
-from passlib.context import CryptContext
+import bcrypt
 
 from app.models.models import User, UserRole
 from app.core.config import settings
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+def hash_password(password: str) -> str:
+    """Hash password using bcrypt."""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 
 async def create_admin_user():
     """Create the initial admin user."""
 
-    # Create async engine
-    engine = create_async_engine(settings.DATABASE_URL, echo=True)
+    # Create async engine - use the same database as import
+    db_url = "sqlite+aiosqlite:///./uns_rirekisho_prod.db"
+    engine = create_async_engine(db_url, echo=True)
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with async_session() as session:
@@ -47,7 +50,7 @@ async def create_admin_user():
         admin_user = User(
             username="admin",
             email="admin@universal-kikaku.co.jp",
-            hashed_password=pwd_context.hash("Admin@123!"),
+            password_hash=hash_password("Admin123"),
             full_name="System Administrator",
             role=UserRole.SUPER_ADMIN,
             is_active=True,
@@ -60,7 +63,7 @@ async def create_admin_user():
         print("Initial admin user created successfully!")
         print("=" * 50)
         print(f"Username: admin")
-        print(f"Password: Admin@123!")
+        print(f"Password: Admin123")
         print(f"Role: super_admin")
         print("=" * 50)
         print("\nIMPORTANT: Please change this password immediately after first login!")

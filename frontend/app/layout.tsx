@@ -28,7 +28,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja" suppressHydrationWarning>
-      <body className={`${inter.variable} ${notoSansJP.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${notoSansJP.variable} font-sans antialiased bg-aurora min-h-screen text-slate-900 dark:text-slate-50 selection:bg-primary-500/30`}>
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -7,7 +7,7 @@ from sqlalchemy import select, func
 from app.core.database import get_db
 from app.core.security import get_current_user, require_staff
 from app.models.models import CompanyApartment, Employee, User
-from app.schemas.schemas import (
+from app.schemas import (
     CompanyApartmentCreate,
     CompanyApartmentUpdate,
     CompanyApartmentResponse,

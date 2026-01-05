@@ -132,7 +132,7 @@ export function Sidebar({ onLogout }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex flex-col bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transition-all duration-300',
+          'fixed inset-y-0 left-0 z-50 flex flex-col glass border-r-0 border-r border-white/20 dark:border-white/10 transition-all duration-300',
           // Desktop behavior
           'hidden lg:flex',
           collapsed ? 'lg:w-20' : 'lg:w-64'
@@ -156,7 +156,7 @@ export function Sidebar({ onLogout }: SidebarProps) {
             animate={{ x: 0 }}
             exit={{ x: -280 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-y-0 left-0 z-50 w-72 flex flex-col bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 lg:hidden"
+            className="fixed inset-y-0 left-0 z-50 w-72 flex flex-col glass border-r-0 lg:hidden"
           >
             <button
               onClick={() => setMobileOpen(false)}
@@ -167,7 +167,7 @@ export function Sidebar({ onLogout }: SidebarProps) {
             </button>
             <SidebarContent
               collapsed={false}
-              setCollapsed={() => {}}
+              setCollapsed={() => { }}
               isDark={isDark}
               toggleTheme={toggleTheme}
               onLogout={onLogout}
